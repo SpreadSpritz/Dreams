@@ -1,9 +1,11 @@
+--- START OF FILE text/html ---
+
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sogni / Dreams</title>
+    <title>Dreams / Sogni</title>
     <style>
         /* Apple HIG Dark Mode Color Palette & Typography */
         :root {
@@ -13,6 +15,7 @@
             --text-secondary: #8E8E93;
             --accent-blue: #0A84FF;
             --accent-yellow: #FFD60A;
+            --accent-green: #30D158;
             --separator: #38383A;
             --error-red: #FF453A;
             --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -20,6 +23,9 @@
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-primary); font-family: var(--font-stack); overflow-x: hidden; }
+
+        /* Censorship Style Addition */
+        .censored-box { background-color: #000; color: #000; border-radius: 2px; padding: 0 2px; user-select: none; cursor: default; }
 
         /* Top Navigation Bar */
         .nav-bar { padding: 50px 20px 15px 20px; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--separator); }
@@ -30,10 +36,10 @@
         .btn-small { background-color: #2C2C2E; color: var(--text-primary); border: none; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; font-family: var(--font-stack); cursor: pointer; }
         .btn-small.logout { color: var(--error-red); }
         
-        /* Modern Bell Icon & Dot */
+        /* Modern Icons */
         .bell-container { position: relative; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; }
-        .btn-bell { background: transparent; border: none; color: var(--text-primary); padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
-        .btn-bell:active { opacity: 0.6; }
+        .btn-icon-top { background: transparent; border: none; color: var(--text-primary); padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+        .btn-icon-top:active { opacity: 0.6; }
         .notification-dot { display: none; position: absolute; top: 0px; right: 2px; width: 10px; height: 10px; background-color: var(--error-red); border-radius: 50%; border: 2px solid var(--bg-color); }
 
         /* iOS Segmented Control */
@@ -62,7 +68,7 @@
         .dream-list { padding: 20px; padding-bottom: 120px; }
         .empty-state { text-align: center; color: var(--text-secondary); margin-top: 50px; font-size: 16px; line-height: 1.5; }
 
-        /* Dream Cards */
+        /* Dream & Friend Cards */
         .dream-card { background-color: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; cursor: pointer; }
         .dream-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .dream-title-container { flex: 1; padding-right: 10px; }
@@ -92,6 +98,9 @@
         /* Modals */
         .modal { position: fixed; top: 100%; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 30; transition: top 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }
         .modal.open { top: 0; }
+        /* Modal with higher z-index for friend selection */
+        .modal-high { z-index: 60; }
+        
         .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--separator); background-color: var(--card-bg); }
         .modal-header h2 { margin: 0; font-size: 17px; font-weight: 600; }
         .modal-btn { background: none; border: none; color: var(--accent-blue); font-size: 17px; font-family: var(--font-stack); cursor: pointer; padding: 0; }
@@ -105,7 +114,7 @@
         textarea.form-control { resize: none; height: 150px; }
         .form-control:focus { outline: 2px solid var(--accent-blue); }
 
-        /* Overlays (Confirm & Send) */
+        /* Overlays (Confirm & Send & Publish) */
         .confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .confirm-overlay.open { opacity: 1; visibility: visible; }
         .confirm-box { background-color: rgba(30, 30, 30, 0.95); width: 270px; border-radius: 14px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.3s; }
@@ -126,42 +135,48 @@
 </head>
 <body>
 
-    <!-- AUTHENTICATION SCREEN -->
     <div id="authScreen">
         <div class="nav-bar" style="border-bottom:none;">
             <div class="nav-header" style="justify-content: flex-end;">
-                <button class="btn-small" id="authLangSwitch" onclick="toggleLanguage()">EN</button>
+                <button class="btn-small" id="authLangSwitch" onclick="toggleLanguage()">IT</button>
             </div>
         </div>
         <div class="auth-container">
-            <h1 class="auth-title" id="authTitle">I Tuoi Sogni</h1>
+            <h1 class="auth-title" id="authTitle">Your Dreams</h1>
             
             <div class="form-group">
-                <label id="lblAuthUser">Nome Utente</label>
-                <input type="text" id="authUsername" class="form-control" autocomplete="off" placeholder="es: Mario123">
+                <label id="lblAuthUser">Username</label>
+                <input type="text" id="authUsername" class="form-control" autocomplete="off" placeholder="e.g. Mario123">
             </div>
             <div class="form-group">
                 <label id="lblAuthPass">Password</label>
-                <input type="password" id="authPassword" class="form-control" placeholder="Minimo 6 caratteri">
+                <input type="password" id="authPassword" class="form-control" placeholder="Minimum 6 characters">
             </div>
 
             <div class="auth-buttons">
-                <button class="btn-auth register" id="btnAuthReg" onclick="performRegister()">Registrati</button>
-                <button class="btn-auth login" id="btnAuthLog" onclick="performLogin()">Accedi</button>
+                <button class="btn-auth register" id="btnAuthReg" onclick="performRegister()">Register</button>
+                <button class="btn-auth login" id="btnAuthLog" onclick="performLogin()">Login</button>
             </div>
             
             <div class="auth-error" id="authErrorMsg"></div>
         </div>
     </div>
 
-    <!-- MAIN APP SCREEN -->
     <div id="appScreen">
         <div class="nav-bar">
             <div class="nav-header">
-                <h1 id="appTitle">Sogni</h1>
+                <h1 id="appTitle">Dreams</h1>
                 <div class="header-buttons">
+                    <button class="btn-icon-top" onclick="openFriendsModal()" aria-label="Friends">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </button>
                     <div class="bell-container">
-                        <button class="btn-bell" onclick="openInboxModal()" aria-label="Notifiche">
+                        <button class="btn-icon-top" onclick="openInboxModal()" aria-label="Notifications">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -169,41 +184,38 @@
                         </button>
                         <div id="notifDot" class="notification-dot"></div>
                     </div>
-                    <button class="btn-small logout" id="btnLogout" onclick="performLogout()">Esci</button>
-                    <button class="btn-small" id="appLangSwitch" onclick="toggleLanguage()">EN</button>
+                    <button class="btn-small logout" id="btnLogout" onclick="performLogout()">Logout</button>
+                    <button class="btn-small" id="appLangSwitch" onclick="toggleLanguage()">IT</button>
                 </div>
             </div>
             
             <div class="segmented-control">
-                <button class="segment-btn active" id="tab-all" onclick="switchTab('all')">Tutti</button>
-                <button class="segment-btn" id="tab-fav" onclick="switchTab('favorites')">Preferiti</button>
+                <button class="segment-btn active" id="tab-all" onclick="switchTab('all')">All</button>
+                <button class="segment-btn" id="tab-fav" onclick="switchTab('favorites')">Favorites</button>
+                <button class="segment-btn" id="tab-browse" onclick="switchTab('browse')">Browse</button>
             </div>
         </div>
 
         <div class="dream-list" id="dreamList"></div>
 
         <div class="bottom-bar">
-            <button class="btn-add" id="btnAddMain" onclick="openAddModal()">Aggiungi Sogno</button>
+            <button class="btn-add" id="btnAddMain" onclick="openAddModal()">Add Dream</button>
         </div>
     </div>
 
-    <!-- ADD/EDIT MODAL -->
     <div class="modal" id="dreamModal">
         <div class="modal-header">
-            <button class="modal-btn" id="btnCancel" onclick="closeModal()">Annulla</button>
-            <h2 id="modalTitle">Nuovo Sogno</h2>
-            <button class="modal-btn save" id="btnSave" onclick="saveDream()">Salva</button>
+            <button class="modal-btn" id="btnCancel" onclick="closeModal()">Cancel</button>
+            <h2 id="modalTitle">New Dream</h2>
+            <button class="modal-btn save" id="btnSave" onclick="saveDream()">Save</button>
         </div>
         <div class="modal-body">
             
-            <!-- Hybrid Date Input (Text + Hidden Calendar) -->
             <div class="form-group">
-                <label id="lblDate">Data</label>
+                <label id="lblDate">Date</label>
                 <div style="position: relative; display: flex; align-items: center;">
                     <input type="text" id="dreamDate" class="form-control" autocomplete="off" style="padding-right: 45px;">
-                    
                     <input type="date" id="hiddenDatePicker" style="position: absolute; right: 10px; width: 30px; height: 30px; opacity: 0; z-index: 2; cursor: pointer;">
-                    
                     <svg style="position: absolute; right: 14px; z-index: 1; color: var(--accent-blue); pointer-events: none;" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -214,66 +226,111 @@
             </div>
 
             <div class="form-group">
-                <label id="lblTitle">Titolo</label>
+                <label id="lblTitle">Title</label>
                 <input type="text" id="dreamTitle" class="form-control" autocomplete="off">
             </div>
             <div class="form-group">
-                <label id="lblLocation">Luogo</label>
+                <label id="lblLocation">Location</label>
                 <input type="text" id="dreamLocation" class="form-control" autocomplete="off">
             </div>
             <div class="form-group">
-                <label id="lblCharacters">Personaggi</label>
+                <label id="lblCharacters">Characters</label>
                 <input type="text" id="dreamCharacters" class="form-control" autocomplete="off">
             </div>
             <div class="form-group">
-                <label id="lblStory">Storia</label>
+                <label id="lblStory">Story</label>
                 <textarea id="dreamStory" class="form-control"></textarea>
             </div>
         </div>
     </div>
 
-    <!-- INBOX MODAL -->
+    <div class="modal" id="friendsModal">
+        <div class="modal-header">
+            <h2 id="friendsTitle">Friends</h2>
+            <button class="modal-btn" onclick="closeFriendsModal()" id="btnFriendsClose">Close</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <input type="text" id="friendUsernameInput" class="form-control" placeholder="Account (e.g. Mario123)" autocomplete="off" style="margin-bottom: 10px;">
+                <input type="text" id="friendDisplayNameInput" class="form-control" placeholder="Visible Name (e.g. Mom)" autocomplete="off" style="margin-bottom: 10px;">
+                <button class="btn-action btn-edit" style="margin-top:0;" id="btnAddFriendAction" onclick="addFriend()">Add Friend</button>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--separator); margin: 25px 0;">
+            <div id="friendsListContainer"></div>
+        </div>
+    </div>
+
     <div class="modal" id="inboxModal">
         <div class="modal-header">
-            <h2 id="inboxModalTitle">Messaggi</h2>
-            <button class="modal-btn" onclick="closeInboxModal()" id="btnInboxClose">Chiudi</button>
+            <h2 id="inboxModalTitle">Messages</h2>
+            <button class="modal-btn" onclick="closeInboxModal()" id="btnInboxClose">Close</button>
         </div>
         <div class="modal-body" style="padding: 0;">
             <div class="dream-list" id="inboxList"></div>
         </div>
     </div>
 
-    <!-- CONFIRM DELETE POPUP -->
     <div class="confirm-overlay" id="confirmModal">
         <div class="confirm-box">
             <div class="confirm-text">
-                <h3 id="confirmTitle">Elimina Sogno</h3>
-                <p id="confirmMsg">Sei sicuro di voler eliminare questo sogno? L'azione non può essere annullata.</p>
+                <h3 id="confirmTitle">Delete Dream</h3>
+                <p id="confirmMsg">Are you sure you want to delete this dream? This action cannot be undone.</p>
             </div>
             <div class="confirm-actions">
-                <button class="confirm-btn-cancel" id="btnConfirmCancel" onclick="closeConfirmModal()">Annulla</button>
-                <button class="confirm-btn-action" id="btnConfirmDelete" onclick="executeDelete()">Elimina</button>
+                <button class="confirm-btn-cancel" id="btnConfirmCancel" onclick="closeConfirmModal()">Cancel</button>
+                <button class="confirm-btn-action" id="btnConfirmDelete" onclick="executeDelete()">Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- SEND DREAM POPUP -->
+    <div class="confirm-overlay" id="publishConfirmModal">
+        <div class="confirm-box">
+            <div class="confirm-text">
+                <h3 id="pubConfirmTitle">Publish Dream</h3>
+                <p id="pubConfirmMsg">Are you sure you want to publish this dream to the web?</p>
+            </div>
+            <div class="confirm-actions">
+                <button class="confirm-btn-cancel" onclick="closePublishModal()">Cancel</button>
+                <button class="confirm-btn-action" id="pubConfirmBtnAction" style="color:var(--accent-blue);" onclick="executePublishToggle()">Publish</button>
+            </div>
+        </div>
+    </div>
+
     <div class="confirm-overlay" id="sendModalOverlay">
         <div class="confirm-box">
             <div class="confirm-text">
-                <h3 id="sendModalTitle">Invia Sogno</h3>
-                <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
-                    <input type="text" id="sendRecipient" class="form-control" autocomplete="off" placeholder="Nome utente destinatario">
+                <h3 id="sendModalTitle">Send Dream</h3>
+                
+                <div class="form-group" style="margin-top: 15px; margin-bottom: 0; display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="sendRecipient" class="form-control" autocomplete="off" placeholder="Username" style="flex:1;">
+                    <button class="btn-icon-svg" onclick="openSelectFriendModal()" title="Choose Friend" style="padding: 10px; background-color: var(--card-bg); border-radius: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </button>
                 </div>
+                
             </div>
             <div class="confirm-actions">
-                <button class="confirm-btn-cancel" id="btnSendCancel" onclick="closeSendModal()">Annulla</button>
-                <button class="confirm-btn-cancel" style="font-weight: 600;" id="btnSendConfirm" onclick="executeSendDream()">Invia</button>
+                <button class="confirm-btn-cancel" id="btnSendCancel" onclick="closeSendModal()">Cancel</button>
+                <button class="confirm-btn-cancel" style="font-weight: 600;" id="btnSendConfirm" onclick="executeSendDream()">Send</button>
             </div>
         </div>
     </div>
 
-    <!-- FIREBASE & APP LOGIC -->
+    <div class="modal modal-high" id="selectFriendModal">
+        <div class="modal-header">
+            <h2 id="selectFriendTitle">Choose Friend</h2>
+            <button class="modal-btn" onclick="closeSelectFriendModal()" id="btnSelectFriendClose">Close</button>
+        </div>
+        <div class="modal-body" style="padding: 0;">
+            <div class="dream-list" id="selectFriendsList"></div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, get, child, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -295,15 +352,22 @@
 
         let dreams =[];
         let inboxData = {}; 
+        let friendsData = {};
+        let publicDreamsData = {};
+        
         let editingIndex = -1; 
         let dreamToDeleteIndex = -1; 
         let dreamToSendIndex = -1;
+        let dreamToPublishIndex = -1;
         
         let currentTab = 'all'; 
         let currentUser = null;
         let dbListener = null;
         let inboxListener = null;
-        let currentLang = localStorage.getItem('apple_dreams_lang') || 'it';
+        let friendsListener = null;
+        let publicListener = null;
+
+        let currentLang = localStorage.getItem('apple_dreams_lang') || 'en';
 
         const tDict = {
             it: {
@@ -311,42 +375,54 @@
                 authPass: "Password", authLog: "Accedi", authReg: "Registrati", authLogout: "Esci",
                 errEmpty: "Inserisci un nome utente e una password (min 6 caratteri).", 
                 errLog: "Password errata o utente non trovato.", errReg: "Nome utente già esistente. Scegline un altro.", 
-                errDb: "Errore di connessione.", tabAll: "Tutti", tabFav: "Preferiti", addBtn: "Aggiungi Sogno",
+                errDb: "Errore di connessione.", tabAll: "Tutti", tabFav: "Preferiti", tabBrowse: "Esplora", addBtn: "Aggiungi Sogno",
                 emptyAll: "Nessun sogno registrato.<br>Tocca \"Aggiungi Sogno\" per iniziare.",
-                emptyFav: "Nessun sogno tra i preferiti.", locLabel: "Luogo", charLabel: "Personaggi",
+                emptyFav: "Nessun sogno tra i preferiti.", emptyBrowse: "Nessun sogno pubblico disponibile.",
+                locLabel: "Luogo", charLabel: "Personaggi",
                 storyLabel: "Storia", locUnknown: "Sconosciuto", charNone: "Nessuno", storyEmpty: "Nessun dettaglio.",
                 editBtn: "Modifica", deleteBtn: "Elimina", sendBtn: "Invia Sogno", downloadBtn: "Scarica Sogno",
+                publishBtn: "Pubblica", makePrivateBtn: "Rendi Privato",
                 modalCancel: "Annulla", modalSave: "Salva", modalNewTitle: "Nuovo Sogno", modalEditTitle: "Modifica Sogno", 
                 lblDate: "Data", lblTitle: "Titolo", phTitle: "Un volo misterioso...", phLoc: "Dove è successo?", 
                 phChar: "Chi c'era con te?", phStory: "Cosa è successo nel sogno?", phDate: "es: Febbraio 2025, 2023...", 
                 alertTitle: "Inserisci almeno il titolo.",
                 confirmTitle: "Elimina Sogno", confirmMsg: "Vuoi davvero eliminare questo sogno? L'azione non può essere annullata.",
                 confirmCancel: "Annulla", confirmDelete: "Elimina",
-                sendModalTitle: "Invia a qualcuno", sendPh: "Nome utente destinatario", sendConfirm: "Invia",
+                confirmPubTitle: "Pubblica Sogno", confirmPubMsg: "Sei sicuro di voler pubblicare questo sogno nel Web?",
+                confirmPrivTitle: "Rendi Privato", confirmPrivMsg: "Sei sicuro di voler rendere questo sogno privato e rimuoverlo dal Web?",
+                sendModalTitle: "Invia a qualcuno", sendPh: "Nome utente", sendConfirm: "Invia",
                 inboxTitle: "Messaggi", inboxClose: "Chiudi", emptyInbox: "Nessun sogno ricevuto.",
-                fromText: "Da:", sentSuccess: "Sogno inviato con successo!", userNotFound: "L'utente indicato non esiste.",
-                deleteInboxBtn: "Elimina Messaggio"
+                fromText: "Da:", authorText: "Autore:", sentSuccess: "Sogno inviato con successo!", userNotFound: "L'utente indicato non esiste.",
+                deleteInboxBtn: "Elimina Messaggio",
+                friendsTitle: "Amici", friendsClose: "Chiudi", friendUserPh: "Account (es: Mario123)", friendDisplayPh: "Nome (es: Marco)",
+                addFriendBtn: "Aggiungi Amico", noFriends: "Nessun amico aggiunto.", removeFriend: "Rimuovi", selectFriendTitle: "Scegli Amico"
             },
             en: {
                 title: "Dreams", toggleLangBtn: "IT", authTitle: "Your Dreams", authUser: "Username",
                 authPass: "Password", authLog: "Login", authReg: "Register", authLogout: "Logout",
                 errEmpty: "Enter a username and password (min 6 chars).", 
                 errLog: "Wrong password or user not found.", errReg: "Username already taken.", 
-                errDb: "Connection error.", tabAll: "All", tabFav: "Favorites", addBtn: "Add Dream",
+                errDb: "Connection error.", tabAll: "All", tabFav: "Favorites", tabBrowse: "Browse", addBtn: "Add Dream",
                 emptyAll: "No dreams recorded yet.<br>Tap \"Add Dream\" to start.",
-                emptyFav: "No favorite dreams.", locLabel: "Location", charLabel: "Characters",
+                emptyFav: "No favorite dreams.", emptyBrowse: "No public dreams available.",
+                locLabel: "Location", charLabel: "Characters",
                 storyLabel: "Story", locUnknown: "Unknown", charNone: "None", storyEmpty: "No story details.",
                 editBtn: "Edit", deleteBtn: "Delete", sendBtn: "Send Dream", downloadBtn: "Download Dream",
+                publishBtn: "Publish", makePrivateBtn: "Make Private",
                 modalCancel: "Cancel", modalSave: "Save", modalNewTitle: "New Dream", modalEditTitle: "Edit Dream", 
                 lblDate: "Date", lblTitle: "Title", phTitle: "A mysterious flight...", phLoc: "Where did it happen?", 
                 phChar: "Who was there?", phStory: "What happened in the dream?", phDate: "e.g., Feb 2025, 2023...", 
                 alertTitle: "Please provide at least a title.",
                 confirmTitle: "Delete Dream", confirmMsg: "Are you sure you want to delete this dream? This action cannot be undone.",
                 confirmCancel: "Cancel", confirmDelete: "Delete",
+                confirmPubTitle: "Publish Dream", confirmPubMsg: "Are you sure you want to publish this dream to the Web?",
+                confirmPrivTitle: "Make Private", confirmPrivMsg: "Are you sure you want to make this dream private and remove it from the Web?",
                 sendModalTitle: "Send to someone", sendPh: "Recipient username", sendConfirm: "Send",
                 inboxTitle: "Inbox", inboxClose: "Close", emptyInbox: "No received dreams.",
-                fromText: "From:", sentSuccess: "Dream sent successfully!", userNotFound: "User does not exist.",
-                deleteInboxBtn: "Delete Message"
+                fromText: "From:", authorText: "Author:", sentSuccess: "Dream sent successfully!", userNotFound: "User does not exist.",
+                deleteInboxBtn: "Delete Message",
+                friendsTitle: "Friends", friendsClose: "Close", friendUserPh: "Account (e.g., Mario123)", friendDisplayPh: "Name (e.g., Mark)",
+                addFriendBtn: "Add Friend", noFriends: "No friends added.", removeFriend: "Remove", selectFriendTitle: "Select Friend"
             }
         };
 
@@ -357,14 +433,22 @@
             else { document.getElementById('authScreen').style.display = 'block'; document.getElementById('appScreen').style.display = 'none'; }
         };
 
-        // Aggiorna l'input di testo quando scegli una data dal calendario nascosto
         document.getElementById('hiddenDatePicker').addEventListener('change', (e) => {
-            if (e.target.value) {
-                document.getElementById('dreamDate').value = formatDateForDisplay(e.target.value);
-            }
+            if (e.target.value) { document.getElementById('dreamDate').value = formatDateForDisplay(e.target.value); }
         });
 
         function cleanUsername(u) { return u.trim().replace(/[.#$\[\]\s]/g, '').toLowerCase(); }
+
+        // --- CENSORSHIP LOGIC ---
+        function applyCensorship(text, format = 'html') {
+            if (!text) return '';
+            const pattern = /\[redacted\]/gi;
+            if (format === 'html') {
+                return text.replace(pattern, '<span class="censored-box">[redacted]</span>');
+            } else {
+                return text.replace(pattern, '██████████');
+            }
+        }
 
         window.performRegister = () => {
             const rawU = document.getElementById('authUsername').value;
@@ -373,7 +457,7 @@
             const u = cleanUsername(rawU);
 
             if (!u || p.length < 6) { err.innerText = tDict[currentLang].errEmpty; return; }
-            err.innerText = "Caricamento... / Loading...";
+            err.innerText = "Loading...";
             
             get(child(dbRef, `users/${u}/info`)).then((snapshot) => {
                 if (snapshot.exists()) { err.innerText = tDict[currentLang].errReg; } 
@@ -388,7 +472,7 @@
             const u = cleanUsername(rawU);
 
             if (!u || !p) { err.innerText = tDict[currentLang].errEmpty; return; }
-            err.innerText = "Caricamento... / Loading...";
+            err.innerText = "Loading...";
             
             get(child(dbRef, `users/${u}/info`)).then((snapshot) => {
                 if (snapshot.exists()) {
@@ -412,25 +496,176 @@
                 const data = snapshot.val();
                 dreams = data ? data :[];
                 renderDreams();
+                if(document.getElementById('inboxModal').classList.contains('open')) { renderInbox(); }
             });
 
             const inboxRef = ref(db, `users/${currentUser}/inbox`);
             inboxListener = onValue(inboxRef, (snapshot) => {
                 inboxData = snapshot.val() || {};
                 checkUnreadMessages();
-                renderInbox();
+                if(document.getElementById('inboxModal').classList.contains('open')) { renderInbox(); }
+            });
+
+            const friendsRef = ref(db, `users/${currentUser}/friends`);
+            friendsListener = onValue(friendsRef, (snapshot) => {
+                friendsData = snapshot.val() || {};
+                if(document.getElementById('friendsModal').classList.contains('open')) { renderFriendsList(); }
+                if(document.getElementById('selectFriendModal').classList.contains('open')) { renderSelectFriendsList(); }
+            });
+
+            const publicRef = ref(db, `publicDreams`);
+            publicListener = onValue(publicRef, (snapshot) => {
+                publicDreamsData = snapshot.val() || {};
+                if(currentTab === 'browse') renderDreams();
             });
         }
 
         window.performLogout = () => {
-            if (dbListener) { dbListener(); }
-            if (inboxListener) { inboxListener(); }
+            if (dbListener) dbListener();
+            if (inboxListener) inboxListener();
+            if (friendsListener) friendsListener();
+            if (publicListener) publicListener();
             localStorage.removeItem('dreams_session_user');
-            currentUser = null; dreams =[]; inboxData = {};
+            currentUser = null; dreams =[]; inboxData = {}; friendsData = {}; publicDreamsData = {};
             document.getElementById('authScreen').style.display = 'block';
             document.getElementById('appScreen').style.display = 'none';
         };
 
+        // --- BROWSE LOGIC (PUBBLICAZIONE) ---
+        window.openPublishToggleModal = (event, index) => {
+            event.stopPropagation();
+            dreamToPublishIndex = index;
+            const dream = dreams[index];
+            const t = tDict[currentLang];
+            const isPublic = dream.isPublic;
+
+            document.getElementById('pubConfirmTitle').innerText = isPublic ? t.confirmPrivTitle : t.confirmPubTitle;
+            document.getElementById('pubConfirmMsg').innerText = isPublic ? t.confirmPrivMsg : t.confirmPubMsg;
+            document.getElementById('pubConfirmBtnAction').innerText = isPublic ? t.makePrivateBtn : t.publishBtn;
+            document.getElementById('pubConfirmBtnAction').style.color = isPublic ? "var(--error-red)" : "var(--accent-blue)";
+            
+            document.getElementById('publishConfirmModal').classList.add('open');
+        };
+
+        window.closePublishModal = () => {
+            document.getElementById('publishConfirmModal').classList.remove('open');
+            dreamToPublishIndex = -1;
+        };
+
+        window.executePublishToggle = () => {
+            const index = dreamToPublishIndex;
+            const dream = dreams[index];
+            const dreamKey = `${currentUser}_${index}`;
+
+            if (dream.isPublic) {
+                // Diventa privato
+                dream.isPublic = false;
+                remove(ref(db, `publicDreams/${dreamKey}`));
+            } else {
+                // Diventa pubblico
+                dream.isPublic = true;
+                const payload = { ...dream, author: currentUser, timestamp: Date.now() };
+                set(ref(db, `publicDreams/${dreamKey}`), payload);
+            }
+            saveToFirebase();
+            closePublishModal();
+        };
+
+        // --- RUBRICA AMICI ---
+        window.openFriendsModal = () => { 
+            document.getElementById('friendsModal').classList.add('open'); 
+            renderFriendsList();
+        };
+        window.closeFriendsModal = () => { document.getElementById('friendsModal').classList.remove('open'); };
+
+        window.addFriend = () => {
+            const rawU = document.getElementById('friendUsernameInput').value;
+            const u = cleanUsername(rawU);
+            const d = document.getElementById('friendDisplayNameInput').value.trim();
+            if (!u || !d) return;
+
+            const btn = document.getElementById('btnAddFriendAction');
+            const ogText = btn.innerText;
+            btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
+
+            set(ref(db, `users/${currentUser}/friends/${u}`), {
+                username: u,
+                displayName: d
+            }).then(() => {
+                btn.innerHTML = ogText; btn.disabled = false;
+                document.getElementById('friendUsernameInput').value = '';
+                document.getElementById('friendDisplayNameInput').value = '';
+            }).catch(() => { btn.innerHTML = ogText; btn.disabled = false; });
+        };
+
+        window.removeFriend = (u) => { remove(ref(db, `users/${currentUser}/friends/${u}`)); };
+
+        function renderFriendsList() {
+            const t = tDict[currentLang];
+            const container = document.getElementById('friendsListContainer');
+            container.innerHTML = '';
+            const keys = Object.keys(friendsData);
+
+            if (keys.length === 0) {
+                container.innerHTML = `<div class="empty-state" style="margin-top:20px;">${t.noFriends}</div>`;
+                return;
+            }
+
+            keys.forEach(k => {
+                const f = friendsData[k];
+                const card = document.createElement('div');
+                card.className = 'dream-card';
+                card.style.display = 'flex'; card.style.justifyContent = 'space-between'; card.style.alignItems = 'center'; card.style.padding = '12px 16px';
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="dream-title" style="margin-bottom:2px;">${escapeHTML(f.displayName)}</div>
+                        <div class="dream-date">@${escapeHTML(f.username)}</div>
+                    </div>
+                    <button class="btn-action btn-delete" style="width:auto; padding:8px 12px; margin:0;" onclick="removeFriend('${k}')">${t.removeFriend}</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.openSelectFriendModal = () => { 
+            document.getElementById('selectFriendModal').classList.add('open'); 
+            renderSelectFriendsList();
+        };
+        window.closeSelectFriendModal = () => { document.getElementById('selectFriendModal').classList.remove('open'); };
+
+        window.selectFriendForSend = (u) => {
+            document.getElementById('sendRecipient').value = u;
+            closeSelectFriendModal();
+        };
+
+        function renderSelectFriendsList() {
+            const t = tDict[currentLang];
+            const container = document.getElementById('selectFriendsList');
+            container.innerHTML = '';
+            const keys = Object.keys(friendsData);
+
+            if (keys.length === 0) {
+                container.innerHTML = `<div class="empty-state">${t.noFriends}</div>`;
+                return;
+            }
+
+            keys.forEach(k => {
+                const f = friendsData[k];
+                const card = document.createElement('div');
+                card.className = 'dream-card';
+                card.style.padding = '16px';
+                card.onclick = () => selectFriendForSend(f.username);
+                
+                card.innerHTML = `
+                    <div class="dream-title" style="margin-bottom:2px;">${escapeHTML(f.displayName)}</div>
+                    <div class="dream-date">@${escapeHTML(f.username)}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- INBOX ---
         function checkUnreadMessages() {
             let hasUnread = false;
             for (let key in inboxData) { if (!inboxData[key].isRead) hasUnread = true; }
@@ -444,6 +679,7 @@
             }
             if (changed) { update(ref(db, `users/${currentUser}/inbox`), updates); }
             document.getElementById('inboxModal').classList.add('open');
+            renderInbox();
         };
 
         window.closeInboxModal = () => { document.getElementById('inboxModal').classList.remove('open'); };
@@ -470,62 +706,95 @@
 
             get(child(dbRef, `users/${recipient}/info`)).then((snapshot) => {
                 if (snapshot.exists()) {
-                    const dreamData = dreams[dreamToSendIndex];
+                    const dreamData = { ...dreams[dreamToSendIndex] };
+                    if (!dreamData.dreamer) dreamData.dreamer = currentUser;
+
                     const inboxPayload = { sender: currentUser, dream: dreamData, timestamp: Date.now(), isRead: false };
                     push(ref(db, `users/${recipient}/inbox`), inboxPayload).then(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                        alert(tDict[currentLang].sentSuccess);
-                        closeSendModal();
-                    }).catch(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    });
+                        btn.innerHTML = originalText; btn.disabled = false;
+                        alert(tDict[currentLang].sentSuccess); closeSendModal();
+                    }).catch(() => { btn.innerHTML = originalText; btn.disabled = false; });
                 } else { 
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    btn.innerHTML = originalText; btn.disabled = false;
                     alert(tDict[currentLang].userNotFound); 
                 }
-            }).catch(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+            }).catch(() => { btn.innerHTML = originalText; btn.disabled = false; });
         };
 
-        window.downloadDreamToFile = (event, index) => {
-            event.stopPropagation();
-            const dream = dreams[index];
-            const t = tDict[currentLang];
+        // --- SISTEMA DI DOWNLOAD TESTUALE ---
+        function generateTxtContent(dream, t, senderName = null) {
+            const author = dream.dreamer || (senderName ? senderName : currentUser);
+            let metaLine = `${t.authorText} ${author}\n`;
+            if (senderName && senderName !== author) { metaLine += `${t.fromText} ${senderName}\n`; }
             
-            const textContent = `========================================\n${dream.title.toUpperCase()}\n${t.lblDate}: ${dream.date}\n========================================\n\n${t.locLabel}:\n${dream.location || t.locUnknown}\n\n${t.charLabel}:\n${dream.characters || t.charNone}\n\n${t.storyLabel}:\n${dream.story || t.storyEmpty}\n\n========================================\nExported from Dreams App`;
+            // Applica censura nel download (testo semplice)
+            const dTitle = applyCensorship(dream.title, 'text');
+            const dLoc = applyCensorship(dream.location, 'text');
+            const dChars = applyCensorship(dream.characters, 'text');
+            const dStory = applyCensorship(dream.story, 'text');
 
-            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            return `========================================\n${(dTitle || '').toUpperCase()}\n${t.lblDate}: ${dream.date || ''}\n${metaLine}========================================\n\n${t.locLabel}:\n${dLoc || t.locUnknown}\n\n${t.charLabel}:\n${dChars || t.charNone}\n\n${t.storyLabel}:\n${dStory || t.storyEmpty}\n\n========================================\nExported from Dreams App`;
+        }
+
+        function downloadBlob(textContent, title) {
+            const blob = new Blob(["\ufeff" + textContent], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            const safeTitle = dream.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'sogno';
-            a.download = `sogno_${safeTitle}.txt`;
-            
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            const a = document.createElement('a'); a.href = url;
+            const safeTitle = (title || 'dream').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            a.download = `dream_${safeTitle}.txt`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        window.downloadDreamToFile = (event, index, source = 'personal') => {
+            event.stopPropagation();
+            let dream;
+            if (source === 'browse') {
+                dream = Object.values(publicDreamsData).reverse()[index];
+            } else {
+                dream = dreams[index];
+            }
+            const textContent = generateTxtContent(dream, tDict[currentLang], null);
+            downloadBlob(textContent, dream.title);
+        };
+
+        window.downloadInboxDreamToFile = (event, key) => {
+            event.stopPropagation();
+            const item = inboxData[key];
+            const textContent = generateTxtContent(item.dream, tDict[currentLang], item.sender);
+            downloadBlob(textContent, item.dream.title);
+        };
+
+        // --- GESTIONE PREFERITI ---
+        window.toggleInboxFavorite = (event, key) => {
+            event.stopPropagation();
+            const existingIndex = dreams.findIndex(d => d.originalInboxKey === key);
+            if (existingIndex > -1) { dreams.splice(existingIndex, 1); } 
+            else {
+                const item = inboxData[key];
+                const newDream = { ...item.dream, isFavorite: true, dreamer: item.dream.dreamer || item.sender, originalInboxKey: key };
+                dreams.unshift(newDream);
+            }
+            saveToFirebase().then(() => { renderInbox(); });
+        };
+
+        window.toggleFavorite = (event, index) => { 
+            event.stopPropagation(); 
+            if (dreams[index].dreamer && dreams[index].dreamer !== currentUser) { dreams.splice(index, 1); } 
+            else { dreams[index].isFavorite = !dreams[index].isFavorite; }
+            saveToFirebase(); 
         };
 
         window.toggleLanguage = () => { currentLang = currentLang === 'it' ? 'en' : 'it'; localStorage.setItem('apple_dreams_lang', currentLang); applyLanguage(); renderDreams(); renderInbox(); };
-        window.switchTab = (tab) => { currentTab = tab; document.getElementById('tab-all').classList.toggle('active', tab === 'all'); document.getElementById('tab-fav').classList.toggle('active', tab === 'favorites'); renderDreams(); };
-        window.toggleFavorite = (event, index) => { event.stopPropagation(); dreams[index].isFavorite = !dreams[index].isFavorite; saveToFirebase(); };
+        window.switchTab = (tab) => { currentTab = tab; document.getElementById('tab-all').classList.toggle('active', tab === 'all'); document.getElementById('tab-fav').classList.toggle('active', tab === 'favorites'); document.getElementById('tab-browse').classList.toggle('active', tab === 'browse'); renderDreams(); };
         window.toggleDreamDetail = (index) => { const detailView = document.getElementById(`detail-${index}`); detailView.style.display = detailView.style.display === 'block' ? 'none' : 'block'; };
 
         window.openAddModal = () => {
             editingIndex = -1; document.getElementById('modalTitle').innerText = tDict[currentLang].modalNewTitle;
             document.getElementById('dreamTitle').value = ''; document.getElementById('dreamLocation').value = '';
             document.getElementById('dreamCharacters').value = ''; document.getElementById('dreamStory').value = '';
-            
             document.getElementById('dreamDate').value = formatDateForDisplay(getTodayYYYYMMDD());
             document.getElementById('hiddenDatePicker').value = getTodayYYYYMMDD();
-            
             document.getElementById('dreamModal').classList.add('open');
         };
 
@@ -534,10 +803,7 @@
             document.getElementById('modalTitle').innerText = tDict[currentLang].modalEditTitle;
             document.getElementById('dreamTitle').value = dream.title; document.getElementById('dreamLocation').value = dream.location;
             document.getElementById('dreamCharacters').value = dream.characters; document.getElementById('dreamStory').value = dream.story;
-            
-            document.getElementById('dreamDate').value = dream.date || '';
-            document.getElementById('hiddenDatePicker').value = '';
-            
+            document.getElementById('dreamDate').value = dream.date || ''; document.getElementById('hiddenDatePicker').value = '';
             document.getElementById('dreamModal').classList.add('open');
         };
 
@@ -549,41 +815,33 @@
 
             const btn = document.getElementById('btnSave');
             const originalText = btn.innerText;
-            btn.innerHTML = '<div class="spinner"></div>';
-            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
 
             const newDream = {
-                title: title, 
-                date: document.getElementById('dreamDate').value.trim() || formatDateForDisplay(getTodayYYYYMMDD()), 
-                location: document.getElementById('dreamLocation').value.trim(),
-                characters: document.getElementById('dreamCharacters').value.trim(), 
-                story: document.getElementById('dreamStory').value.trim(),
-                isFavorite: editingIndex === -1 ? false : (dreams[editingIndex].isFavorite || false)
+                title: title, date: document.getElementById('dreamDate').value.trim() || formatDateForDisplay(getTodayYYYYMMDD()), 
+                location: document.getElementById('dreamLocation').value.trim(), characters: document.getElementById('dreamCharacters').value.trim(), 
+                story: document.getElementById('dreamStory').value.trim(), isFavorite: editingIndex === -1 ? false : (dreams[editingIndex].isFavorite || false),
+                dreamer: editingIndex === -1 ? currentUser : (dreams[editingIndex].dreamer || currentUser),
+                isPublic: editingIndex === -1 ? false : (dreams[editingIndex].isPublic || false)
             };
-            
+
+            if (editingIndex !== -1 && dreams[editingIndex].originalInboxKey) { newDream.originalInboxKey = dreams[editingIndex].originalInboxKey; }
             if (editingIndex === -1) { dreams.unshift(newDream); } else { dreams[editingIndex] = newDream; }
             
-            saveToFirebase().then(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                closeModal();
-            }).catch(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                closeModal();
-            });
+            saveToFirebase().then(() => { btn.innerHTML = originalText; btn.disabled = false; closeModal(); }).catch(() => { btn.innerHTML = originalText; btn.disabled = false; closeModal(); });
         };
 
         window.confirmDeleteDream = (event, index) => { event.stopPropagation(); dreamToDeleteIndex = index; document.getElementById('confirmModal').classList.add('open'); };
         window.closeConfirmModal = () => { document.getElementById('confirmModal').classList.remove('open'); dreamToDeleteIndex = -1; };
-        window.executeDelete = () => { if (dreamToDeleteIndex > -1) { dreams.splice(dreamToDeleteIndex, 1); saveToFirebase(); closeConfirmModal(); } };
+        window.executeDelete = () => { if (dreamToDeleteIndex > -1) { 
+            const d = dreams[dreamToDeleteIndex];
+            if (d.isPublic) { remove(ref(db, `publicDreams/${currentUser}_${dreamToDeleteIndex}`)); }
+            dreams.splice(dreamToDeleteIndex, 1); 
+            saveToFirebase(); 
+            closeConfirmModal(); 
+        } };
 
-        function saveToFirebase() { 
-            if (currentUser) { 
-                return set(ref(db, `users/${currentUser}/dreams`), dreams); 
-            } 
-            return Promise.resolve();
-        }
+        function saveToFirebase() { if (currentUser) { return set(ref(db, `users/${currentUser}/dreams`), dreams); } return Promise.resolve(); }
 
         function renderInbox() {
             const t = tDict[currentLang]; const inboxList = document.getElementById('inboxList'); inboxList.innerHTML = ''; 
@@ -594,19 +852,32 @@
             keys.forEach(key => {
                 const item = inboxData[key]; const dream = item.dream;
                 const card = document.createElement('div'); card.className = 'dream-card'; card.onclick = () => toggleInboxDetail(key);
+                
+                const isFav = dreams.some(d => d.originalInboxKey === key);
+                const favClass = isFav ? 'btn-fav active' : 'btn-fav'; const favIcon = isFav ? '★' : '☆';
+
+                const author = dream.dreamer || item.sender;
+                let senderInfo = `${t.fromText} ${escapeHTML(item.sender)}`;
+                if (author !== item.sender) { senderInfo += ` <span style="color:var(--accent-yellow); font-size: 13px;">• ${t.authorText} ${escapeHTML(author)}</span>`; }
 
                 card.innerHTML = `
                     <div class="dream-header">
                         <div class="dream-title-container">
-                            <div class="dream-date" style="color: var(--accent-blue); font-weight:600; margin-bottom: 5px; font-size:14px;">${t.fromText} ${escapeHTML(item.sender)}</div>
-                            <div class="dream-title">${escapeHTML(dream.title)}</div>
+                            <div class="dream-date" style="color: var(--accent-blue); font-weight:600; margin-bottom: 5px; font-size:14px;">${senderInfo}</div>
+                            <div class="dream-title">${applyCensorship(escapeHTML(dream.title))}</div>
                             <div class="dream-date">${escapeHTML(dream.date)}</div>
+                        </div>
+                        <div class="dream-icons">
+                            <button class="btn-icon-svg" onclick="downloadInboxDreamToFile(event, '${key}')" title="${t.downloadBtn}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </button>
+                            <button class="${favClass}" onclick="toggleInboxFavorite(event, '${key}')">${favIcon}</button>
                         </div>
                     </div>
                     <div class="dream-detail" id="inbox-detail-${key}">
-                        <strong>${t.locLabel}</strong> <p>${escapeHTML(dream.location) || t.locUnknown}</p>
-                        <strong>${t.charLabel}</strong> <p>${escapeHTML(dream.characters) || t.charNone}</p>
-                        <strong>${t.storyLabel}</strong> <p>${escapeHTML(dream.story).replace(/\n/g, '<br>') || t.storyEmpty}</p>
+                        <strong>${t.locLabel}</strong> <p>${applyCensorship(escapeHTML(dream.location)) || t.locUnknown}</p>
+                        <strong>${t.charLabel}</strong> <p>${applyCensorship(escapeHTML(dream.characters)) || t.charNone}</p>
+                        <strong>${t.storyLabel}</strong> <p>${applyCensorship(escapeHTML(dream.story)).replace(/\n/g, '<br>') || t.storyEmpty}</p>
                         <div class="card-actions">
                             <button class="btn-action btn-delete" onclick="deleteInboxItem(event, '${key}')">${t.deleteInboxBtn}</button>
                         </div>
@@ -620,55 +891,76 @@
             const t = tDict[currentLang]; const dreamList = document.getElementById('dreamList'); dreamList.innerHTML = ''; 
             let hasVisibleDreams = false;
 
-            if (dreams && dreams.length > 0) {
-                dreams.forEach((dream, originalIndex) => {
+            let sourceArray = [];
+            if (currentTab === 'browse') {
+                sourceArray = Object.values(publicDreamsData).reverse();
+            } else {
+                sourceArray = dreams;
+            }
+
+            if (sourceArray && sourceArray.length > 0) {
+                sourceArray.forEach((dream, originalIndex) => {
                     if (currentTab === 'favorites' && !dream.isFavorite) return;
                     hasVisibleDreams = true;
 
                     const card = document.createElement('div'); card.className = 'dream-card'; card.onclick = () => toggleDreamDetail(originalIndex);
                     const favClass = dream.isFavorite ? 'btn-fav active' : 'btn-fav'; const favIcon = dream.isFavorite ? '★' : '☆';
 
+                    const author = dream.author || dream.dreamer || currentUser;
+                    const isMine = (currentTab !== 'browse' && author === currentUser);
+                    const pubColor = dream.isPublic ? 'var(--accent-green)' : 'var(--text-primary)';
+
+                    let authorHtml = '';
+                    if (author !== currentUser || currentTab === 'browse') { 
+                        authorHtml = `<div class="dream-date" style="color: var(--accent-yellow); font-weight:600; margin-bottom: 5px; font-size:14px;">${t.authorText} ${escapeHTML(author)}</div>`; 
+                    }
+
                     card.innerHTML = `
                         <div class="dream-header">
                             <div class="dream-title-container">
-                                <div class="dream-title">${escapeHTML(dream.title)}</div>
+                                ${authorHtml}
+                                <div class="dream-title">${applyCensorship(escapeHTML(dream.title))}</div>
                                 <div class="dream-date">${escapeHTML(dream.date)}</div>
                             </div>
-                            
-                            <!-- ICONE (Download + Invia + Preferiti) -->
                             <div class="dream-icons">
-                                <button class="btn-icon-svg" onclick="downloadDreamToFile(event, ${originalIndex})" title="${t.downloadBtn}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="7 10 12 15 17 10"></polyline>
-                                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                                    </svg>
+                                ${isMine ? `
+                                <button class="btn-icon-svg" style="color:${pubColor}" onclick="openPublishToggleModal(event, ${originalIndex})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                                 </button>
+                                ` : ''}
+                                <button class="btn-icon-svg" onclick="downloadDreamToFile(event, ${originalIndex}, '${currentTab === 'browse' ? 'browse' : 'personal'}')" title="${t.downloadBtn}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                </button>
+                                ${currentTab !== 'browse' ? `
                                 <button class="btn-icon-svg" onclick="openSendModal(event, ${originalIndex})" title="${t.sendBtn}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
                                 <button class="${favClass}" onclick="toggleFavorite(event, ${originalIndex})">${favIcon}</button>
+                                ` : ''}
                             </div>
                         </div>
 
                         <div class="dream-detail" id="detail-${originalIndex}">
-                            <strong>${t.locLabel}</strong> <p>${escapeHTML(dream.location) || t.locUnknown}</p>
-                            <strong>${t.charLabel}</strong> <p>${escapeHTML(dream.characters) || t.charNone}</p>
-                            <strong>${t.storyLabel}</strong> <p>${escapeHTML(dream.story).replace(/\n/g, '<br>') || t.storyEmpty}</p>
+                            <strong>${t.locLabel}</strong> <p>${applyCensorship(escapeHTML(dream.location)) || t.locUnknown}</p>
+                            <strong>${t.charLabel}</strong> <p>${applyCensorship(escapeHTML(dream.characters)) || t.charNone}</p>
+                            <strong>${t.storyLabel}</strong> <p>${applyCensorship(escapeHTML(dream.story)).replace(/\n/g, '<br>') || t.storyEmpty}</p>
+                            ${isMine ? `
                             <div class="card-actions">
                                 <button class="btn-action btn-edit" onclick="openEditModal(event, ${originalIndex})">${t.editBtn}</button>
                                 <button class="btn-action btn-delete" onclick="confirmDeleteDream(event, ${originalIndex})">${t.deleteBtn}</button>
-                            </div>
+                            </div>` : ''}
                         </div>
                     `;
                     dreamList.appendChild(card);
                 });
             }
 
-            if (!hasVisibleDreams) { dreamList.innerHTML = `<div class="empty-state">${currentTab === 'favorites' ? t.emptyFav : t.emptyAll}</div>`; }
+            if (!hasVisibleDreams) { 
+                let msg = t.emptyAll;
+                if (currentTab === 'favorites') msg = t.emptyFav;
+                else if (currentTab === 'browse') msg = t.emptyBrowse;
+                dreamList.innerHTML = `<div class="empty-state">${msg}</div>`; 
+            }
         }
 
         function applyLanguage() {
@@ -678,7 +970,7 @@
             document.getElementById('lblAuthUser').innerText = t.authUser; document.getElementById('lblAuthPass').innerText = t.authPass;
             document.getElementById('btnAuthLog').innerText = t.authLog; document.getElementById('btnAuthReg').innerText = t.authReg;
             document.getElementById('btnLogout').innerText = t.authLogout; document.getElementById('tab-all').innerText = t.tabAll;
-            document.getElementById('tab-fav').innerText = t.tabFav; document.getElementById('btnAddMain').innerText = t.addBtn;
+            document.getElementById('tab-fav').innerText = t.tabFav; document.getElementById('tab-browse').innerText = t.tabBrowse; document.getElementById('btnAddMain').innerText = t.addBtn;
             document.getElementById('btnCancel').innerText = t.modalCancel; document.getElementById('btnSave').innerText = t.modalSave;
             document.getElementById('lblDate').innerText = t.lblDate; document.getElementById('lblTitle').innerText = t.lblTitle;
             document.getElementById('lblLocation').innerText = t.locLabel; document.getElementById('lblCharacters').innerText = t.charLabel;
@@ -690,24 +982,17 @@
             document.getElementById('sendModalTitle').innerText = t.sendModalTitle; document.getElementById('sendRecipient').placeholder = t.sendPh;
             document.getElementById('btnSendCancel').innerText = t.confirmCancel; document.getElementById('btnSendConfirm').innerText = t.sendConfirm;
             document.getElementById('inboxModalTitle').innerText = t.inboxTitle; document.getElementById('btnInboxClose').innerText = t.inboxClose;
-            
-            // Nuova etichetta data segnaposto
             document.getElementById('dreamDate').placeholder = t.phDate;
+            
+            document.getElementById('friendsTitle').innerText = t.friendsTitle; document.getElementById('btnFriendsClose').innerText = t.friendsClose;
+            document.getElementById('friendUsernameInput').placeholder = t.friendUserPh; document.getElementById('friendDisplayNameInput').placeholder = t.friendDisplayPh;
+            document.getElementById('btnAddFriendAction').innerText = t.addFriendBtn; document.getElementById('selectFriendTitle').innerText = t.selectFriendTitle;
+            document.getElementById('btnSelectFriendClose').innerText = t.friendsClose;
+            if(document.getElementById('friendsModal').classList.contains('open')) renderFriendsList();
         }
 
         function getTodayYYYYMMDD() { const today = new Date(); const offset = today.getTimezoneOffset() * 60000; return (new Date(today - offset)).toISOString().split('T')[0]; }
-        
-        function formatDateForDisplay(dateString) { 
-            if (!dateString) return ''; 
-            const parts = dateString.split('-'); 
-            if (parts.length !== 3) return dateString; 
-            const d = new Date(parts[0], parts[1] - 1, parts[2]); 
-            if (isNaN(d)) return dateString;
-            const dateOptions = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }; 
-            const locale = currentLang === 'it' ? 'it-IT' : 'en-US'; 
-            return d.toLocaleDateString(locale, dateOptions); 
-        }
-        
+        function formatDateForDisplay(dateString) { if (!dateString) return ''; const parts = dateString.split('-'); if (parts.length !== 3) return dateString; const d = new Date(parts[0], parts[1] - 1, parts[2]); if (isNaN(d)) return dateString; const dateOptions = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }; const locale = currentLang === 'it' ? 'it-IT' : 'en-US'; return d.toLocaleDateString(locale, dateOptions); }
         function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
     </script>
 </body>
