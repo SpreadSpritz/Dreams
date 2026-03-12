@@ -102,7 +102,6 @@
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
         .form-control { width: 100%; background-color: #2C2C2E; border: none; color: var(--text-primary); padding: 14px 16px; border-radius: 10px; font-size: 17px; font-family: var(--font-stack); }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         textarea.form-control { resize: none; height: 150px; }
         .form-control:focus { outline: 2px solid var(--accent-blue); }
 
@@ -161,7 +160,6 @@
             <div class="nav-header">
                 <h1 id="appTitle">Sogni</h1>
                 <div class="header-buttons">
-                    <!-- Modern Bell Icon for Inbox -->
                     <div class="bell-container">
                         <button class="btn-bell" onclick="openInboxModal()" aria-label="Notifiche">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -197,10 +195,24 @@
             <button class="modal-btn save" id="btnSave" onclick="saveDream()">Salva</button>
         </div>
         <div class="modal-body">
+            
+            <!-- Hybrid Date Input (Text + Hidden Calendar) -->
             <div class="form-group">
                 <label id="lblDate">Data</label>
-                <input type="date" id="dreamDate" class="form-control">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="dreamDate" class="form-control" autocomplete="off" style="padding-right: 45px;">
+                    
+                    <input type="date" id="hiddenDatePicker" style="position: absolute; right: 10px; width: 30px; height: 30px; opacity: 0; z-index: 2; cursor: pointer;">
+                    
+                    <svg style="position: absolute; right: 14px; z-index: 1; color: var(--accent-blue); pointer-events: none;" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
             </div>
+
             <div class="form-group">
                 <label id="lblTitle">Titolo</label>
                 <input type="text" id="dreamTitle" class="form-control" autocomplete="off">
@@ -306,7 +318,8 @@
                 editBtn: "Modifica", deleteBtn: "Elimina", sendBtn: "Invia Sogno", downloadBtn: "Scarica Sogno",
                 modalCancel: "Annulla", modalSave: "Salva", modalNewTitle: "Nuovo Sogno", modalEditTitle: "Modifica Sogno", 
                 lblDate: "Data", lblTitle: "Titolo", phTitle: "Un volo misterioso...", phLoc: "Dove è successo?", 
-                phChar: "Chi c'era con te?", phStory: "Cosa è successo nel sogno?", alertTitle: "Inserisci almeno il titolo.",
+                phChar: "Chi c'era con te?", phStory: "Cosa è successo nel sogno?", phDate: "es: Febbraio 2025, 2023...", 
+                alertTitle: "Inserisci almeno il titolo.",
                 confirmTitle: "Elimina Sogno", confirmMsg: "Vuoi davvero eliminare questo sogno? L'azione non può essere annullata.",
                 confirmCancel: "Annulla", confirmDelete: "Elimina",
                 sendModalTitle: "Invia a qualcuno", sendPh: "Nome utente destinatario", sendConfirm: "Invia",
@@ -326,7 +339,8 @@
                 editBtn: "Edit", deleteBtn: "Delete", sendBtn: "Send Dream", downloadBtn: "Download Dream",
                 modalCancel: "Cancel", modalSave: "Save", modalNewTitle: "New Dream", modalEditTitle: "Edit Dream", 
                 lblDate: "Date", lblTitle: "Title", phTitle: "A mysterious flight...", phLoc: "Where did it happen?", 
-                phChar: "Who was there?", phStory: "What happened in the dream?", alertTitle: "Please provide at least a title.",
+                phChar: "Who was there?", phStory: "What happened in the dream?", phDate: "e.g., Feb 2025, 2023...", 
+                alertTitle: "Please provide at least a title.",
                 confirmTitle: "Delete Dream", confirmMsg: "Are you sure you want to delete this dream? This action cannot be undone.",
                 confirmCancel: "Cancel", confirmDelete: "Delete",
                 sendModalTitle: "Send to someone", sendPh: "Recipient username", sendConfirm: "Send",
@@ -342,6 +356,13 @@
             if (savedUser) { loginSuccess(savedUser); } 
             else { document.getElementById('authScreen').style.display = 'block'; document.getElementById('appScreen').style.display = 'none'; }
         };
+
+        // Aggiorna l'input di testo quando scegli una data dal calendario nascosto
+        document.getElementById('hiddenDatePicker').addEventListener('change', (e) => {
+            if (e.target.value) {
+                document.getElementById('dreamDate').value = formatDateForDisplay(e.target.value);
+            }
+        });
 
         function cleanUsername(u) { return u.trim().replace(/[.#$\[\]\s]/g, '').toLowerCase(); }
 
@@ -442,7 +463,6 @@
             const recipient = cleanUsername(recipientRaw);
             if (!recipient) return;
 
-            // Aggiunta Logica Spinner per Invia Sogno
             const btn = document.getElementById('btnSendConfirm');
             const originalText = btn.innerText;
             btn.innerHTML = '<div class="spinner"></div>';
@@ -477,7 +497,7 @@
             const dream = dreams[index];
             const t = tDict[currentLang];
             
-            const textContent = `========================================\n${dream.title.toUpperCase()}\n${t.lblDate}: ${formatDateForDisplay(dream.date)}\n========================================\n\n${t.locLabel}:\n${dream.location || t.locUnknown}\n\n${t.charLabel}:\n${dream.characters || t.charNone}\n\n${t.storyLabel}:\n${dream.story || t.storyEmpty}\n\n========================================\nExported from Dreams App`;
+            const textContent = `========================================\n${dream.title.toUpperCase()}\n${t.lblDate}: ${dream.date}\n========================================\n\n${t.locLabel}:\n${dream.location || t.locUnknown}\n\n${t.charLabel}:\n${dream.characters || t.charNone}\n\n${t.storyLabel}:\n${dream.story || t.storyEmpty}\n\n========================================\nExported from Dreams App`;
 
             const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -502,7 +522,11 @@
             editingIndex = -1; document.getElementById('modalTitle').innerText = tDict[currentLang].modalNewTitle;
             document.getElementById('dreamTitle').value = ''; document.getElementById('dreamLocation').value = '';
             document.getElementById('dreamCharacters').value = ''; document.getElementById('dreamStory').value = '';
-            document.getElementById('dreamDate').value = getTodayYYYYMMDD(); document.getElementById('dreamModal').classList.add('open');
+            
+            document.getElementById('dreamDate').value = formatDateForDisplay(getTodayYYYYMMDD());
+            document.getElementById('hiddenDatePicker').value = getTodayYYYYMMDD();
+            
+            document.getElementById('dreamModal').classList.add('open');
         };
 
         window.openEditModal = (event, index) => {
@@ -510,7 +534,11 @@
             document.getElementById('modalTitle').innerText = tDict[currentLang].modalEditTitle;
             document.getElementById('dreamTitle').value = dream.title; document.getElementById('dreamLocation').value = dream.location;
             document.getElementById('dreamCharacters').value = dream.characters; document.getElementById('dreamStory').value = dream.story;
-            document.getElementById('dreamDate').value = getCompatibleDate(dream.date); document.getElementById('dreamModal').classList.add('open');
+            
+            document.getElementById('dreamDate').value = dream.date || '';
+            document.getElementById('hiddenDatePicker').value = '';
+            
+            document.getElementById('dreamModal').classList.add('open');
         };
 
         window.closeModal = () => { document.getElementById('dreamModal').classList.remove('open'); };
@@ -519,15 +547,17 @@
             const title = document.getElementById('dreamTitle').value.trim();
             if (!title) { alert(tDict[currentLang].alertTitle); return; }
 
-            // Aggiunta Logica Spinner per Salva Sogno
             const btn = document.getElementById('btnSave');
             const originalText = btn.innerText;
             btn.innerHTML = '<div class="spinner"></div>';
             btn.disabled = true;
 
             const newDream = {
-                title: title, date: document.getElementById('dreamDate').value, location: document.getElementById('dreamLocation').value.trim(),
-                characters: document.getElementById('dreamCharacters').value.trim(), story: document.getElementById('dreamStory').value.trim(),
+                title: title, 
+                date: document.getElementById('dreamDate').value.trim() || formatDateForDisplay(getTodayYYYYMMDD()), 
+                location: document.getElementById('dreamLocation').value.trim(),
+                characters: document.getElementById('dreamCharacters').value.trim(), 
+                story: document.getElementById('dreamStory').value.trim(),
                 isFavorite: editingIndex === -1 ? false : (dreams[editingIndex].isFavorite || false)
             };
             
@@ -570,7 +600,7 @@
                         <div class="dream-title-container">
                             <div class="dream-date" style="color: var(--accent-blue); font-weight:600; margin-bottom: 5px; font-size:14px;">${t.fromText} ${escapeHTML(item.sender)}</div>
                             <div class="dream-title">${escapeHTML(dream.title)}</div>
-                            <div class="dream-date">${formatDateForDisplay(dream.date)}</div>
+                            <div class="dream-date">${escapeHTML(dream.date)}</div>
                         </div>
                     </div>
                     <div class="dream-detail" id="inbox-detail-${key}">
@@ -602,7 +632,7 @@
                         <div class="dream-header">
                             <div class="dream-title-container">
                                 <div class="dream-title">${escapeHTML(dream.title)}</div>
-                                <div class="dream-date">${formatDateForDisplay(dream.date)}</div>
+                                <div class="dream-date">${escapeHTML(dream.date)}</div>
                             </div>
                             
                             <!-- ICONE (Download + Invia + Preferiti) -->
@@ -660,11 +690,24 @@
             document.getElementById('sendModalTitle').innerText = t.sendModalTitle; document.getElementById('sendRecipient').placeholder = t.sendPh;
             document.getElementById('btnSendCancel').innerText = t.confirmCancel; document.getElementById('btnSendConfirm').innerText = t.sendConfirm;
             document.getElementById('inboxModalTitle').innerText = t.inboxTitle; document.getElementById('btnInboxClose').innerText = t.inboxClose;
+            
+            // Nuova etichetta data segnaposto
+            document.getElementById('dreamDate').placeholder = t.phDate;
         }
 
         function getTodayYYYYMMDD() { const today = new Date(); const offset = today.getTimezoneOffset() * 60000; return (new Date(today - offset)).toISOString().split('T')[0]; }
-        function formatDateForDisplay(dateString) { if (!dateString) return ''; if (dateString.includes(',')) return dateString; const parts = dateString.split('-'); if (parts.length !== 3) return dateString; const d = new Date(parts[0], parts[1] - 1, parts[2]); const dateOptions = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }; const locale = currentLang === 'it' ? 'it-IT' : 'en-US'; return d.toLocaleDateString(locale, dateOptions); }
-        function getCompatibleDate(dateString) { if (!dateString) return getTodayYYYYMMDD(); if (dateString.includes(',')) { const d = new Date(dateString); return !isNaN(d) ? d.toISOString().split('T')[0] : getTodayYYYYMMDD(); } return dateString; }
+        
+        function formatDateForDisplay(dateString) { 
+            if (!dateString) return ''; 
+            const parts = dateString.split('-'); 
+            if (parts.length !== 3) return dateString; 
+            const d = new Date(parts[0], parts[1] - 1, parts[2]); 
+            if (isNaN(d)) return dateString;
+            const dateOptions = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }; 
+            const locale = currentLang === 'it' ? 'it-IT' : 'en-US'; 
+            return d.toLocaleDateString(locale, dateOptions); 
+        }
+        
         function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
     </script>
 </body>
